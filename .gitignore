@@ -1,10 +1,6 @@
 # macOS
 .DS_Store
 
-# Swift Package Manager
-.build/
-.swiftpm/
-
 # Xcode
 DerivedData/
 *.xcuserdata/
@@ -15,8 +11,5 @@ xcuserdata/
 
 # Xcode project workspace settings
 project.xcworkspace/xcshareddata/
-
-# Swift build artifacts
-Package.resolved
 
 # Test report files
