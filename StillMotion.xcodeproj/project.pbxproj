@@ -1,0 +1,474 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 60;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		A00000000000000000000001 /* StillMotionApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000001 /* StillMotionApp.swift */; };
+		A00000000000000000000002 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000002 /* AppModel.swift */; };
+		A00000000000000000000003 /* PlaybackPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000003 /* PlaybackPolicy.swift */; };
+		A00000000000000000000004 /* MediaImportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000004 /* MediaImportService.swift */; };
+		A00000000000000000000005 /* WallpaperCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000005 /* WallpaperCoordinator.swift */; };
+		A00000000000000000000006 /* WallpaperWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000006 /* WallpaperWindow.swift */; };
+		A00000000000000000000007 /* FullScreenDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000007 /* FullScreenDetector.swift */; };
+		A00000000000000000000008 /* SystemActivityObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000008 /* SystemActivityObserver.swift */; };
+		A00000000000000000000009 /* FullScreenWindowClassifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000014 /* FullScreenWindowClassifier.swift */; };
+		A00000000000000000000010 /* MediaFileValidator.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000015 /* MediaFileValidator.swift */; };
+		A00000000000000000000011 /* PlaybackPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000011 /* PlaybackPolicyTests.swift */; };
+		A00000000000000000000012 /* FullScreenWindowClassifierTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000012 /* FullScreenWindowClassifierTests.swift */; };
+		A00000000000000000000013 /* MediaFileValidatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000013 /* MediaFileValidatorTests.swift */; };
+		A00000000000000000000014 /* DisplayDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000016 /* DisplayDescriptor.swift */; };
+		A00000000000000000000015 /* WallpaperWindowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000017 /* WallpaperWindowTests.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		D00000000000000000000001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E00000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = C00000000000000000000001;
+			remoteInfo = StillMotion;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		B00000000000000000000001 /* StillMotionApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StillMotionApp.swift; sourceTree = "<group>"; };
+		B00000000000000000000002 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
+		B00000000000000000000003 /* PlaybackPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackPolicy.swift; sourceTree = "<group>"; };
+		B00000000000000000000004 /* MediaImportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaImportService.swift; sourceTree = "<group>"; };
+		B00000000000000000000005 /* WallpaperCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperCoordinator.swift; sourceTree = "<group>"; };
+		B00000000000000000000006 /* WallpaperWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperWindow.swift; sourceTree = "<group>"; };
+		B00000000000000000000007 /* FullScreenDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullScreenDetector.swift; sourceTree = "<group>"; };
+		B00000000000000000000008 /* SystemActivityObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemActivityObserver.swift; sourceTree = "<group>"; };
+		B00000000000000000000009 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		B00000000000000000000010 /* StillMotion.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = StillMotion.entitlements; sourceTree = "<group>"; };
+		B00000000000000000000011 /* PlaybackPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackPolicyTests.swift; sourceTree = "<group>"; };
+		B00000000000000000000012 /* FullScreenWindowClassifierTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullScreenWindowClassifierTests.swift; sourceTree = "<group>"; };
+		B00000000000000000000013 /* MediaFileValidatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaFileValidatorTests.swift; sourceTree = "<group>"; };
+		B00000000000000000000014 /* FullScreenWindowClassifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullScreenWindowClassifier.swift; sourceTree = "<group>"; };
+		B00000000000000000000015 /* MediaFileValidator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaFileValidator.swift; sourceTree = "<group>"; };
+		B00000000000000000000016 /* DisplayDescriptor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayDescriptor.swift; sourceTree = "<group>"; };
+		B00000000000000000000017 /* WallpaperWindowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperWindowTests.swift; sourceTree = "<group>"; };
+		B00000000000000000000020 /* StillMotion.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = StillMotion.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B00000000000000000000021 /* StillMotionTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = StillMotionTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		F00000000000000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F00000000000000000000002 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		E00000000000000000000002 = {
+			isa = PBXGroup;
+			children = (
+				E00000000000000000000003 /* StillMotion */,
+				E00000000000000000000006 /* StillMotionCore */,
+				E00000000000000000000004 /* StillMotionTests */,
+				E00000000000000000000005 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		E00000000000000000000003 /* StillMotion */ = {
+			isa = PBXGroup;
+			children = (
+				B00000000000000000000001 /* StillMotionApp.swift */,
+				B00000000000000000000002 /* AppModel.swift */,
+				B00000000000000000000016 /* DisplayDescriptor.swift */,
+				B00000000000000000000004 /* MediaImportService.swift */,
+				B00000000000000000000005 /* WallpaperCoordinator.swift */,
+				B00000000000000000000006 /* WallpaperWindow.swift */,
+				B00000000000000000000007 /* FullScreenDetector.swift */,
+				B00000000000000000000008 /* SystemActivityObserver.swift */,
+				B00000000000000000000009 /* Info.plist */,
+				B00000000000000000000010 /* StillMotion.entitlements */,
+			);
+			path = StillMotion;
+			sourceTree = "<group>";
+		};
+		E00000000000000000000004 /* StillMotionTests */ = {
+			isa = PBXGroup;
+			children = (
+				B00000000000000000000011 /* PlaybackPolicyTests.swift */,
+				B00000000000000000000012 /* FullScreenWindowClassifierTests.swift */,
+				B00000000000000000000013 /* MediaFileValidatorTests.swift */,
+				B00000000000000000000017 /* WallpaperWindowTests.swift */,
+			);
+			path = StillMotionTests;
+			sourceTree = "<group>";
+		};
+		E00000000000000000000005 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				B00000000000000000000020 /* StillMotion.app */,
+				B00000000000000000000021 /* StillMotionTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		E00000000000000000000006 /* StillMotionCore */ = {
+			isa = PBXGroup;
+			children = (
+				B00000000000000000000003 /* PlaybackPolicy.swift */,
+				B00000000000000000000014 /* FullScreenWindowClassifier.swift */,
+				B00000000000000000000015 /* MediaFileValidator.swift */,
+			);
+			path = StillMotionCore;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		C00000000000000000000001 /* StillMotion */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C00000000000000000000011 /* Build configuration list for PBXNativeTarget "StillMotion" */;
+			buildPhases = (
+				F00000000000000000000011 /* Sources */,
+				F00000000000000000000001 /* Frameworks */,
+				F00000000000000000000021 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = StillMotion;
+			productName = StillMotion;
+			productReference = B00000000000000000000020 /* StillMotion.app */;
+			productType = "com.apple.product-type.application";
+		};
+		C00000000000000000000002 /* StillMotionTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C00000000000000000000012 /* Build configuration list for PBXNativeTarget "StillMotionTests" */;
+			buildPhases = (
+				F00000000000000000000012 /* Sources */,
+				F00000000000000000000002 /* Frameworks */,
+				F00000000000000000000022 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				D00000000000000000000002 /* PBXTargetDependency */,
+			);
+			name = StillMotionTests;
+			productName = StillMotionTests;
+			productReference = B00000000000000000000021 /* StillMotionTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		E00000000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1600;
+				LastUpgradeCheck = 2660;
+				TargetAttributes = {
+					C00000000000000000000001 = {
+						CreatedOnToolsVersion = 16.0;
+					};
+					C00000000000000000000002 = {
+						CreatedOnToolsVersion = 16.0;
+						TestTargetID = C00000000000000000000001;
+					};
+				};
+			};
+			buildConfigurationList = C00000000000000000000010 /* Build configuration list for PBXProject "StillMotion" */;
+			compatibilityVersion = "Xcode 15.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = E00000000000000000000002;
+			productRefGroup = E00000000000000000000005 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				C00000000000000000000001 /* StillMotion */,
+				C00000000000000000000002 /* StillMotionTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		F00000000000000000000021 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F00000000000000000000022 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		F00000000000000000000011 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A00000000000000000000001 /* StillMotionApp.swift in Sources */,
+				A00000000000000000000002 /* AppModel.swift in Sources */,
+				A00000000000000000000003 /* PlaybackPolicy.swift in Sources */,
+				A00000000000000000000004 /* MediaImportService.swift in Sources */,
+				A00000000000000000000005 /* WallpaperCoordinator.swift in Sources */,
+				A00000000000000000000006 /* WallpaperWindow.swift in Sources */,
+				A00000000000000000000007 /* FullScreenDetector.swift in Sources */,
+				A00000000000000000000008 /* SystemActivityObserver.swift in Sources */,
+				A00000000000000000000009 /* FullScreenWindowClassifier.swift in Sources */,
+				A00000000000000000000010 /* MediaFileValidator.swift in Sources */,
+				A00000000000000000000014 /* DisplayDescriptor.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F00000000000000000000012 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A00000000000000000000011 /* PlaybackPolicyTests.swift in Sources */,
+				A00000000000000000000012 /* FullScreenWindowClassifierTests.swift in Sources */,
+				A00000000000000000000013 /* MediaFileValidatorTests.swift in Sources */,
+				A00000000000000000000015 /* WallpaperWindowTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		D00000000000000000000002 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = C00000000000000000000001 /* StillMotion */;
+			targetProxy = D00000000000000000000001 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		C00000000000000000000101 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		C00000000000000000000102 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		C00000000000000000000111 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = StillMotion/StillMotion.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = StillMotion/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.stillmotion.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		C00000000000000000000112 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = StillMotion/StillMotion.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = StillMotion/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.stillmotion.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		C00000000000000000000121 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.stillmotion.app.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/StillMotion.app/Contents/MacOS/StillMotion";
+			};
+			name = Debug;
+		};
+		C00000000000000000000122 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.stillmotion.app.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/StillMotion.app/Contents/MacOS/StillMotion";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		C00000000000000000000010 /* Build configuration list for PBXProject "StillMotion" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C00000000000000000000101 /* Debug */,
+				C00000000000000000000102 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C00000000000000000000011 /* Build configuration list for PBXNativeTarget "StillMotion" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C00000000000000000000111 /* Debug */,
+				C00000000000000000000112 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C00000000000000000000012 /* Build configuration list for PBXNativeTarget "StillMotionTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C00000000000000000000121 /* Debug */,
+				C00000000000000000000122 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = E00000000000000000000001 /* Project object */;
+}
