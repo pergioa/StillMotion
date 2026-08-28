@@ -10,12 +10,20 @@ actor MediaImportService {
 
     private enum DefaultsKey {
         static let assignments = "importedVideoFilenamesByDisplay"
+        static let originalFilenames = "originalVideoFilenamesByDisplay"
         static let legacyImportedFilename = "importedVideoFilename"
     }
 
     struct RestoreResult {
         let videosByDisplayID: [String: URL]
+        let originalFilenamesByDisplayID: [String: String]
         let failures: [RestoreFailure]
+    }
+
+    struct ImportedVideo {
+        let url: URL
+        let originalFilename: String
+        let replacedManagedFilename: String?
     }
 
     struct RestoreFailure {
@@ -28,7 +36,7 @@ actor MediaImportService {
         self.defaults = defaults
     }
 
-    func importVideo(from sourceURL: URL, for displayID: String) async throws -> URL {
+    func importVideo(from sourceURL: URL, for displayID: String) async throws -> ImportedVideo {
         let hasSecurityScope = sourceURL.startAccessingSecurityScopedResource()
         defer {
             if hasSecurityScope {
@@ -58,10 +66,22 @@ actor MediaImportService {
         }
 
         var assignments = persistedAssignments()
+        let replacedManagedFilename = assignments[displayID]
+        var originalFilenames = persistedOriginalFilenames()
+        originalFilenames[destinationURL.lastPathComponent] = sourceURL.lastPathComponent
+        persist(
+            originalFilenames: originalFilenames,
+            retaining: Set(assignments.values).union([destinationURL.lastPathComponent])
+        )
         assignments[displayID] = destinationURL.lastPathComponent
         persist(assignments: assignments)
+        persist(originalFilenames: originalFilenames, retaining: Set(assignments.values))
 
-        return destinationURL
+        return ImportedVideo(
+            url: destinationURL,
+            originalFilename: sourceURL.lastPathComponent,
+            replacedManagedFilename: replacedManagedFilename
+        )
     }
 
     func evictStaleWallpaperFrames(activeFrameNames: Set<String>) async throws {
@@ -77,64 +97,18 @@ actor MediaImportService {
         guard let contents = try? fileManager.contentsOfDirectory(at: cacheDirectory, includingPropertiesForKeys: nil) else {
             return
         }
-        let cacheSizeLimit: Int64 = 1_000_000_000
-
-        var frameFiles: [(url: URL, date: Date?, size: Int64)] = []
+        var frameFiles: [URL] = []
         for url in contents where url.pathExtension.lowercased() == "jpg" {
-            do {
-                let attrs = try fileManager.attributesOfItem(atPath: url.path)
-                let size = Int64(attrs[.size] as? Int64 ?? 0)
-                let date = attrs[.modificationDate] as? Date
-                frameFiles.append((url, date, size))
-            } catch {
-                continue
-            }
+            frameFiles.append(url)
         }
 
         var evictedCount = 0
 
-        for info in frameFiles {
-            guard !activeFrameNames.contains(info.url.lastPathComponent) else { continue }
-            try fileManager.removeItem(at: info.url)
-            NSLog("Evicted stale frame: %@", info.url.path)
+        for url in frameFiles {
+            guard !activeFrameNames.contains(url.lastPathComponent) else { continue }
+            try fileManager.removeItem(at: url)
+            NSLog("Evicted stale frame: %@", url.path)
             evictedCount += 1
-        }
-
-        let activeSize = frameFiles
-            .filter { activeFrameNames.contains($0.url.lastPathComponent) }
-            .reduce(Int64(0)) { $0 + $1.size }
-
-        var totalCacheSize: Int64 = 0
-        for info in frameFiles {
-            totalCacheSize += info.size
-        }
-
-        if totalCacheSize - activeSize > cacheSizeLimit {
-            var excess = totalCacheSize - activeSize - cacheSizeLimit
-            for info in frameFiles.sorted(by: { (left, right) -> Bool in
-                switch (left.date, right.date) {
-                case (.some(let l), .some(let r)):
-                    return l < r
-                case (.some, .none):
-                    return false
-                case (.none, .some):
-                    return true
-                case (.none, .none):
-                    return left.url.path < right.url.path
-                }
-            })
-                where excess > 0 {
-                guard !activeFrameNames.contains(info.url.lastPathComponent) else { continue }
-                let size = info.size
-                do {
-                    try fileManager.removeItem(at: info.url)
-                    NSLog("Evicted (cache limit): %@", info.url.path)
-                    excess -= size
-                    evictedCount += 1
-                } catch {
-                    NSLog("Failed to evict frame: %@", info.url.path)
-                }
-            }
         }
 
         if evictedCount > 0 {
@@ -145,11 +119,16 @@ actor MediaImportService {
     func restoredVideoURLs(defaultDisplayID: String?) async throws -> RestoreResult {
         let directory = try applicationSupportDirectory()
         var assignments = persistedAssignments()
+        let originalFilenames = persistedOriginalFilenames()
 
-        if assignments.isEmpty,
-           let defaultDisplayID,
-           let legacyFilename = defaults.string(forKey: DefaultsKey.legacyImportedFilename)
-        {
+        if assignments.isEmpty, let legacyFilename = defaults.string(forKey: DefaultsKey.legacyImportedFilename) {
+            guard let defaultDisplayID else {
+                return RestoreResult(
+                    videosByDisplayID: [:],
+                    originalFilenamesByDisplayID: [:],
+                    failures: []
+                )
+            }
             assignments[defaultDisplayID] = legacyFilename
             persist(assignments: assignments)
         }
@@ -168,8 +147,18 @@ actor MediaImportService {
         }
 
         persist(assignments: assignments)
+        persist(originalFilenames: originalFilenames, retaining: Set(assignments.values))
         removeOrphanedVideos(in: directory, retaining: Set(assignments.values))
-        return RestoreResult(videosByDisplayID: restored, failures: failures)
+        var restoredFilenames: [String: String] = [:]
+        for displayID in restored.keys {
+            guard let managedFilename = assignments[displayID] else { continue }
+            restoredFilenames[displayID] = originalFilenames[managedFilename] ?? managedFilename
+        }
+        return RestoreResult(
+            videosByDisplayID: restored,
+            originalFilenamesByDisplayID: restoredFilenames,
+            failures: failures
+        )
     }
 
     func removeVideo(for displayID: String) throws {
@@ -177,9 +166,16 @@ actor MediaImportService {
         var assignments = persistedAssignments()
         guard let filename = assignments.removeValue(forKey: displayID) else { return }
         persist(assignments: assignments)
+        persist(originalFilenames: persistedOriginalFilenames(), retaining: Set(assignments.values))
         if !assignments.values.contains(filename) {
             try? fileManager.removeItem(at: directory.appendingPathComponent(filename))
         }
+    }
+
+    func removeManagedVideoIfUnassigned(_ filename: String) throws {
+        guard !persistedAssignments().values.contains(filename) else { return }
+        let directory = try applicationSupportDirectory()
+        try? fileManager.removeItem(at: directory.appendingPathComponent(filename))
     }
 
     private func validateVideo(at url: URL) async throws {
@@ -222,9 +218,20 @@ actor MediaImportService {
         defaults.dictionary(forKey: DefaultsKey.assignments) as? [String: String] ?? [:]
     }
 
+    private func persistedOriginalFilenames() -> [String: String] {
+        defaults.dictionary(forKey: DefaultsKey.originalFilenames) as? [String: String] ?? [:]
+    }
+
     private func persist(assignments: [String: String]) {
         defaults.set(assignments, forKey: DefaultsKey.assignments)
         defaults.removeObject(forKey: DefaultsKey.legacyImportedFilename)
+    }
+
+    private func persist(originalFilenames: [String: String], retaining managedFilenames: Set<String>) {
+        defaults.set(
+            originalFilenames.filter { managedFilenames.contains($0.key) },
+            forKey: DefaultsKey.originalFilenames
+        )
     }
 
     private func removeOrphanedVideos(in directory: URL, retaining filenames: Set<String>) {

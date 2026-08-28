@@ -30,6 +30,28 @@ final class FullScreenWindowClassifierTests: XCTestCase {
         )
     }
 
+    func testReportsOnlyScreensContainingFullScreenWindows() {
+        let secondary = CGRect(x: 1728, y: -200, width: 2560, height: 1440)
+        let indexes = FullScreenWindowClassifier.fullScreenScreenIndexes(
+            windows: [makeWindow(bounds: secondary)],
+            screenBounds: [screen, secondary],
+            ownPID: 999
+        )
+
+        XCTAssertEqual(indexes, [1])
+    }
+
+    func testReportsMultipleFullScreenDisplays() {
+        let secondary = CGRect(x: 1728, y: -200, width: 2560, height: 1440)
+        let indexes = FullScreenWindowClassifier.fullScreenScreenIndexes(
+            windows: [makeWindow(bounds: screen), makeWindow(bounds: secondary)],
+            screenBounds: [screen, secondary],
+            ownPID: 999
+        )
+
+        XCTAssertEqual(indexes, [0, 1])
+    }
+
     func testOwnAndIrrelevantWindowsAreExcluded() {
         XCTAssertFalse(classify(makeWindow(ownerPID: 999, bounds: screen)))
         for owner in ["Finder", "Dock", "Window Server", "Control Center", "SystemUIServer"] {

@@ -27,6 +27,14 @@ final class PlaybackPolicyTests: XCTestCase {
         XCTAssertTrue(policy.shouldPlay)
     }
 
+    func testFullScreenOnlyRestrictsTheAffectedDisplay() {
+        let policy = PlaybackPolicy(hasMedia: true, isFullScreenVisible: true)
+
+        XCTAssertTrue(policy.shouldPlayIgnoringFullScreen)
+        XCTAssertFalse(policy.shouldPlay(onFullScreenDisplay: true))
+        XCTAssertTrue(policy.shouldPlay(onFullScreenDisplay: false))
+    }
+
     func testManualPauseSurvivesFullScreenTransition() {
         var policy = PlaybackPolicy(hasMedia: true, isManuallyPaused: true)
         policy.isFullScreenVisible = true

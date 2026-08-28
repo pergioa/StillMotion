@@ -6,16 +6,25 @@ import StillMotionCore
 
 @MainActor
 final class FullScreenDetector {
-    var onChange: ((Bool) -> Void)?
+    var onChange: ((Set<String>) -> Void)?
+
+    private struct ScreenSnapshot {
+        let id: String
+        let bounds: CGRect
+    }
 
     private var workspaceObservers: [NSObjectProtocol] = []
     private var applicationObserver: NSObjectProtocol?
     private var timer: Timer?
     private var delayedEvaluation: DispatchWorkItem?
-    private var lastResult: Bool?
+    private var lastResult: Set<String>?
+    private var screens: [ScreenSnapshot]?
+    private var started = false
+    private var isEnabled = false
 
     func start() {
-        guard timer == nil else { return }
+        guard !started else { return }
+        started = true
 
         let workspaceCenter = NSWorkspace.shared.notificationCenter
         for name in [NSWorkspace.didActivateApplicationNotification, NSWorkspace.activeSpaceDidChangeNotification] {
@@ -34,35 +43,55 @@ final class FullScreenDetector {
             queue: .main
         ) { [weak self] _ in
             MainActor.assumeIsolated {
+                self?.screens = nil
                 self?.scheduleEvaluation()
             }
         }
-
-        let pollingTimer = Timer(timeInterval: 0.75, repeats: true) { [weak self] _ in
-            MainActor.assumeIsolated {
-                self?.evaluateNow()
-            }
-        }
-        RunLoop.main.add(pollingTimer, forMode: .common)
-        timer = pollingTimer
-        evaluateNow()
     }
 
-    func evaluateNow() {
+    func setEnabled(_ enabled: Bool) {
+        guard enabled != isEnabled else { return }
+        isEnabled = enabled
         delayedEvaluation?.cancel()
         delayedEvaluation = nil
 
-        let isFullScreen = FullScreenWindowClassifier.containsFullScreenWindow(
+        if enabled {
+            let pollingTimer = Timer(timeInterval: 0.75, repeats: true) { [weak self] _ in
+                MainActor.assumeIsolated {
+                    self?.evaluateNow()
+                }
+            }
+            RunLoop.main.add(pollingTimer, forMode: .common)
+            timer = pollingTimer
+            evaluateNow()
+        } else {
+            timer?.invalidate()
+            timer = nil
+            guard lastResult != [] else { return }
+            lastResult = []
+            onChange?([])
+        }
+    }
+
+    func evaluateNow() {
+        guard isEnabled else { return }
+        delayedEvaluation?.cancel()
+        delayedEvaluation = nil
+
+        let screens = currentScreens()
+        let fullScreenIndexes = FullScreenWindowClassifier.fullScreenScreenIndexes(
             windows: currentWindows(),
-            screenBounds: currentScreenBounds(),
+            screenBounds: screens.map(\.bounds),
             ownPID: ProcessInfo.processInfo.processIdentifier
         )
-        guard isFullScreen != lastResult else { return }
-        lastResult = isFullScreen
-        onChange?(isFullScreen)
+        let fullScreenDisplayIDs = Set(fullScreenIndexes.map { screens[$0].id })
+        guard fullScreenDisplayIDs != lastResult else { return }
+        lastResult = fullScreenDisplayIDs
+        onChange?(fullScreenDisplayIDs)
     }
 
     private func scheduleEvaluation() {
+        guard isEnabled else { return }
         evaluateNow()
         delayedEvaluation?.cancel()
         let workItem = DispatchWorkItem { [weak self] in
@@ -72,13 +101,18 @@ final class FullScreenDetector {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.25, execute: workItem)
     }
 
-    private func currentScreenBounds() -> [CGRect] {
-        NSScreen.screens.compactMap { screen in
-            guard let number = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber else {
+    private func currentScreens() -> [ScreenSnapshot] {
+        if let screens {
+            return screens
+        }
+        let snapshots = NSScreen.screens.compactMap { screen -> ScreenSnapshot? in
+            guard let displayID = screen.displayID, let persistentDisplayID = screen.persistentDisplayID else {
                 return nil
             }
-            return CGDisplayBounds(CGDirectDisplayID(number.uint32Value))
+            return ScreenSnapshot(id: persistentDisplayID, bounds: CGDisplayBounds(displayID))
         }
+        screens = snapshots
+        return snapshots
     }
 
     private func currentWindows() -> [ObservedWindow] {

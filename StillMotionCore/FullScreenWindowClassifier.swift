@@ -39,15 +39,33 @@ public enum FullScreenWindowClassifier {
         ownOwnerName: String = "StillMotion",
         tolerance: CGFloat = defaultTolerance
     ) -> Bool {
-        windows.contains { window in
-            isFullScreenWindow(
-                window,
-                screenBounds: screenBounds,
-                ownPID: ownPID,
-                ownOwnerName: ownOwnerName,
-                tolerance: tolerance
-            )
-        }
+        !fullScreenScreenIndexes(
+            windows: windows,
+            screenBounds: screenBounds,
+            ownPID: ownPID,
+            ownOwnerName: ownOwnerName,
+            tolerance: tolerance
+        ).isEmpty
+    }
+
+    public static func fullScreenScreenIndexes(
+        windows: [ObservedWindow],
+        screenBounds: [CGRect],
+        ownPID: pid_t,
+        ownOwnerName: String = "StillMotion",
+        tolerance: CGFloat = defaultTolerance
+    ) -> Set<Int> {
+        Set(screenBounds.indices.filter { screenIndex in
+            windows.contains { window in
+                isFullScreenWindow(
+                    window,
+                    screenBounds: [screenBounds[screenIndex]],
+                    ownPID: ownPID,
+                    ownOwnerName: ownOwnerName,
+                    tolerance: tolerance
+                )
+            }
+        })
     }
 
     public static func isFullScreenWindow(

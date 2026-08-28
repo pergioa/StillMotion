@@ -11,6 +11,11 @@ final class AppModel: ObservableObject {
     @Published private(set) var policy: PlaybackPolicy
     @Published private(set) var availableDisplays: [DisplayDescriptor] = []
     @Published private(set) var selectedVideoURLs: [String: URL] = [:]
+    @Published private(set) var originalVideoFilenames: [String: String] = [:]
+    @Published private(set) var previewFrameURLs: [String: URL] = [:]
+    @Published private(set) var fullScreenDisplayIDs: Set<String> = []
+    @Published private(set) var isRestoringVideos = true
+    @Published private(set) var busyDisplayIDs: Set<String> = []
 
     private let mediaService: MediaImportService
     private let wallpaperCoordinator: WallpaperCoordinator
@@ -18,6 +23,7 @@ final class AppModel: ObservableObject {
     private let systemActivityObserver: SystemActivityObserver
     private let defaults: UserDefaults
     private var started = false
+    private var restorationStarted = false
 
     private enum DefaultsKey {
         static let manuallyPaused = "manuallyPaused"
@@ -34,14 +40,17 @@ final class AppModel: ObservableObject {
         initialPolicy.isManuallyPaused = defaults.bool(forKey: DefaultsKey.manuallyPaused)
         policy = initialPolicy
 
-        fullScreenDetector.onChange = { [weak self] isFullScreenVisible in
-            self?.setFullScreenVisible(isFullScreenVisible)
+        fullScreenDetector.onChange = { [weak self] displayIDs in
+            self?.setFullScreenDisplays(displayIDs)
         }
         systemActivityObserver.onChange = { [weak self] isInactive in
             self?.setSystemInactive(isInactive)
         }
         wallpaperCoordinator.onDisplaysChanged = { [weak self] displays in
             self?.updateDisplays(displays)
+        }
+        wallpaperCoordinator.onPreviewFramesChanged = { [weak self] frameURLs in
+            self?.previewFrameURLs = frameURLs
         }
 
         Task { @MainActor [weak self] in
@@ -50,11 +59,7 @@ final class AppModel: ObservableObject {
     }
 
     var hasMedia: Bool {
-        !selectedVideoURLs.isEmpty
-    }
-
-    var displaysWithMedia: [DisplayDescriptor] {
-        availableDisplays.filter { selectedVideoURLs[$0.id] != nil }
+        availableDisplays.contains { selectedVideoURLs[$0.id] != nil }
     }
 
     var statusText: String {
@@ -66,24 +71,40 @@ final class AppModel: ObservableObject {
         case .pausedByUser, .pausedForSystem:
             return "Paused"
         case .pausedForFullScreen:
-            return "Paused — Full-Screen App"
+            return hasPlayingMedia ? "Partially Paused" : "Paused — Full-Screen App"
         }
     }
 
-    var playPauseTitle: String {
-        policy.isManuallyPaused ? "Play" : "Pause"
+    var hasPlayingMedia: Bool {
+        policy.shouldPlayIgnoringFullScreen && availableDisplays.contains { display in
+            selectedVideoURLs[display.id] != nil && !fullScreenDisplayIDs.contains(display.id)
+        }
     }
 
     var menuBarSymbolName: String {
-        policy.shouldPlay ? "play.rectangle.fill" : "pause.rectangle.fill"
+        hasPlayingMedia ? "play.rectangle.fill" : "pause.rectangle.fill"
     }
 
     func videoFilename(for displayID: String) -> String? {
-        selectedVideoURLs[displayID]?.lastPathComponent
+        originalVideoFilenames[displayID] ?? selectedVideoURLs[displayID]?.lastPathComponent
+    }
+
+    func previewFrameURL(for displayID: String) -> URL? {
+        previewFrameURLs[displayID]
+    }
+
+    func isUpdatingBackground(for displayID: String) -> Bool {
+        busyDisplayIDs.contains(displayID)
+    }
+
+    func isBackgroundActionDisabled(for _: String) -> Bool {
+        isRestoringVideos || !busyDisplayIDs.isEmpty
     }
 
     func chooseVideo(for displayID: String) {
+        guard !isBackgroundActionDisabled(for: displayID) else { return }
         guard let display = availableDisplays.first(where: { $0.id == displayID }) else { return }
+        busyDisplayIDs.insert(displayID)
         let panel = NSOpenPanel()
         panel.title = "Choose a Video for \(display.name)"
         panel.prompt = "Choose Video"
@@ -94,9 +115,13 @@ final class AppModel: ObservableObject {
 
         NSApplication.shared.activate()
         panel.begin { [weak self] response in
-            guard response == .OK, let url = panel.url else { return }
             Task { @MainActor in
-                await self?.importVideo(from: url, for: displayID)
+                guard let self else { return }
+                guard response == .OK, let url = panel.url else {
+                    self.busyDisplayIDs.remove(displayID)
+                    return
+                }
+                await self.importVideo(from: url, for: displayID)
             }
         }
     }
@@ -114,12 +139,17 @@ final class AppModel: ObservableObject {
     }
 
     func removeVideo(for displayID: String) {
+        guard !isBackgroundActionDisabled(for: displayID) else { return }
+        busyDisplayIDs.insert(displayID)
         Task { @MainActor [weak self] in
             guard let self else { return }
+            defer { busyDisplayIDs.remove(displayID) }
             do {
                 try await mediaService.removeVideo(for: displayID)
                 selectedVideoURLs.removeValue(forKey: displayID)
+                originalVideoFilenames.removeValue(forKey: displayID)
                 wallpaperCoordinator.removeMedia(for: displayID)
+                try? await evictStaleWallpaperFrames()
                 updateMediaPolicy()
             } catch {
                 present(error: error, title: "Unable to Remove Video")
@@ -135,23 +165,21 @@ final class AppModel: ObservableObject {
         fullScreenDetector.start()
         systemActivityObserver.start()
 
-        Task { @MainActor [weak self] in
-            await self?.restoreVideos()
-        }
+        beginRestoringVideosIfPossible()
     }
 
     private func restoreVideos() async {
+        defer { isRestoringVideos = false }
         do {
             let mainDisplayID = availableDisplays.first(where: \.isMain)?.id ?? availableDisplays.first?.id
             let result = try await mediaService.restoredVideoURLs(defaultDisplayID: mainDisplayID)
             selectedVideoURLs = result.videosByDisplayID
+            originalVideoFilenames = result.originalFilenamesByDisplayID
             await wallpaperCoordinator.setMediaURLs(result.videosByDisplayID)
             updateMediaPolicy()
 
-            let activeBasenames = Set(result.videosByDisplayID.values.map { url in
-                String(url.lastPathComponent.dropLast(4))
-            })
-            try? await mediaService.evictStaleWallpaperFrames(activeFrameNames: activeBasenames)
+            let activeFrameNames = Set(result.videosByDisplayID.values.map(systemWallpaperFrameName))
+            try? await mediaService.evictStaleWallpaperFrames(activeFrameNames: activeFrameNames)
 
             if !result.failures.isEmpty {
                 let details = result.failures.map { failure in
@@ -167,47 +195,79 @@ final class AppModel: ObservableObject {
     }
 
     private func importVideo(from url: URL, for displayID: String) async {
+        defer { busyDisplayIDs.remove(displayID) }
         do {
-            let importedURL = try await mediaService.importVideo(from: url, for: displayID)
-            await installVideo(at: importedURL, for: displayID)
+            let importedVideo = try await mediaService.importVideo(from: url, for: displayID)
+            await installVideo(importedVideo, for: displayID)
         } catch {
             present(error: error, title: "Unable to Use Video")
         }
     }
 
-    private func installVideo(at url: URL, for displayID: String) async {
-        await wallpaperCoordinator.setMedia(url: url, for: displayID)
-        selectedVideoURLs[displayID] = url
+    private func installVideo(_ importedVideo: MediaImportService.ImportedVideo, for displayID: String) async {
+        await wallpaperCoordinator.setMedia(url: importedVideo.url, for: displayID)
+        selectedVideoURLs[displayID] = importedVideo.url
+        originalVideoFilenames[displayID] = importedVideo.originalFilename
+        if let replacedManagedFilename = importedVideo.replacedManagedFilename {
+            try? await mediaService.removeManagedVideoIfUnassigned(replacedManagedFilename)
+        }
+        try? await evictStaleWallpaperFrames()
         updateMediaPolicy()
     }
 
     private func updateDisplays(_ displays: [DisplayDescriptor]) {
         guard displays != availableDisplays else { return }
         availableDisplays = displays
+        beginRestoringVideosIfPossible()
+        updateMediaPolicy()
+    }
+
+    private func beginRestoringVideosIfPossible() {
+        guard started, !restorationStarted, !availableDisplays.isEmpty else { return }
+        restorationStarted = true
+        Task { @MainActor [weak self] in
+            await self?.restoreVideos()
+        }
     }
 
     private func updateMediaPolicy() {
         policy.hasMedia = hasMedia
+        policy.isFullScreenVisible = !affectedFullScreenDisplayIDs.isEmpty
+        fullScreenDetector.setEnabled(hasMedia && !policy.isSystemInactive)
         applyPlaybackPolicy()
     }
 
-    private func setFullScreenVisible(_ isVisible: Bool) {
-        guard policy.isFullScreenVisible != isVisible else { return }
-        policy.isFullScreenVisible = isVisible
+    private func setFullScreenDisplays(_ displayIDs: Set<String>) {
+        guard fullScreenDisplayIDs != displayIDs else { return }
+        fullScreenDisplayIDs = displayIDs
+        policy.isFullScreenVisible = !affectedFullScreenDisplayIDs.isEmpty
         applyPlaybackPolicy()
     }
 
     private func setSystemInactive(_ isInactive: Bool) {
         guard policy.isSystemInactive != isInactive else { return }
-        if !isInactive {
-            fullScreenDetector.evaluateNow()
-        }
         policy.isSystemInactive = isInactive
+        fullScreenDetector.setEnabled(hasMedia && !isInactive)
         applyPlaybackPolicy()
     }
 
     private func applyPlaybackPolicy() {
-        wallpaperCoordinator.setPlaying(policy.shouldPlay)
+        wallpaperCoordinator.setPlayback(
+            globallyAllowed: policy.shouldPlayIgnoringFullScreen,
+            fullScreenDisplayIDs: fullScreenDisplayIDs
+        )
+    }
+
+    private var affectedFullScreenDisplayIDs: Set<String> {
+        let displaysWithMedia = Set(availableDisplays.compactMap { display in
+            selectedVideoURLs[display.id] == nil ? nil : display.id
+        })
+        return fullScreenDisplayIDs.intersection(displaysWithMedia)
+    }
+
+    private func evictStaleWallpaperFrames() async throws {
+        let activeFrameNames = Set(selectedVideoURLs.values.map(systemWallpaperFrameName))
+        try await mediaService.evictStaleWallpaperFrames(activeFrameNames: activeFrameNames)
     }
 
     private func present(error: Error, title: String) {

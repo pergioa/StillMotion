@@ -37,4 +37,12 @@ public struct PlaybackPolicy: Equatable {
     public var shouldPlay: Bool {
         effectiveState == .playing
     }
+
+    public var shouldPlayIgnoringFullScreen: Bool {
+        hasMedia && !isManuallyPaused && !isSystemInactive
+    }
+
+    public func shouldPlay(onFullScreenDisplay: Bool) -> Bool {
+        shouldPlayIgnoringFullScreen && !onFullScreenDisplay
+    }
 }

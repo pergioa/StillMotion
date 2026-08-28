@@ -3,6 +3,12 @@ import XCTest
 @testable import StillMotion
 
 final class WallpaperWindowTests: XCTestCase {
+    func testSystemWallpaperFrameNamePreservesVideoExtension() {
+        let videoURL = URL(fileURLWithPath: "/tmp/Background-123.mp4")
+
+        XCTAssertEqual(systemWallpaperFrameName(for: videoURL), "Background-123.mp4.jpg")
+    }
+
     func testWallpaperUsesLevelImmediatelyAbovePublicDesktopLevel() {
         let level = WallpaperWindow.wallpaperLevel(desktopLevel: -100)
 
