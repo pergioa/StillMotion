@@ -205,9 +205,9 @@ final class AppModel: ObservableObject {
     }
 
     private func installVideo(_ importedVideo: MediaImportService.ImportedVideo, for displayID: String) async {
-        await wallpaperCoordinator.setMedia(url: importedVideo.url, for: displayID)
         selectedVideoURLs[displayID] = importedVideo.url
         originalVideoFilenames[displayID] = importedVideo.originalFilename
+        await wallpaperCoordinator.setMedia(url: importedVideo.url, for: displayID)
         if let replacedManagedFilename = importedVideo.replacedManagedFilename {
             try? await mediaService.removeManagedVideoIfUnassigned(replacedManagedFilename)
         }

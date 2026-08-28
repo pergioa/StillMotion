@@ -411,7 +411,7 @@ private struct BackgroundPreview: View {
                         )
                     )
 
-                if let image {
+                if let image, !isLoading {
                     Image(nsImage: image)
                         .resizable()
                         .scaledToFill()
@@ -460,10 +460,10 @@ private struct BackgroundPreview: View {
             .frame(width: geometry.size.width, height: geometry.size.height)
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         }
-        .task(id: frameURL) {
+        .task(id: "\(isLoading)|\(frameURL?.path ?? "")") {
             image = nil
             loadFailed = false
-            guard let frameURL else { return }
+            guard !isLoading, let frameURL else { return }
             let cgImage: CGImage? = await Task.detached(priority: .utility) {
                 guard let source = CGImageSourceCreateWithURL(frameURL as CFURL, nil) else { return nil }
                 let options: [CFString: Any] = [
