@@ -56,11 +56,12 @@ final class FullScreenDetector {
         delayedEvaluation = nil
 
         if enabled {
-            let pollingTimer = Timer(timeInterval: 0.75, repeats: true) { [weak self] _ in
+            let pollingTimer = Timer(timeInterval: 1, repeats: true) { [weak self] _ in
                 MainActor.assumeIsolated {
                     self?.evaluateNow()
                 }
             }
+            pollingTimer.tolerance = 0.2
             RunLoop.main.add(pollingTimer, forMode: .common)
             timer = pollingTimer
             evaluateNow()
@@ -120,20 +121,30 @@ final class FullScreenDetector {
         guard let rawWindows = CGWindowListCopyWindowInfo(options, kCGNullWindowID) as? [[String: Any]] else {
             return []
         }
+        let ownPID = ProcessInfo.processInfo.processIdentifier
 
         return rawWindows.compactMap { dictionary in
             guard
-                let ownerName = dictionary[kCGWindowOwnerName as String] as? String,
                 let ownerPID = dictionary[kCGWindowOwnerPID as String] as? NSNumber,
+                pid_t(ownerPID.int32Value) != ownPID,
                 let layer = dictionary[kCGWindowLayer as String] as? NSNumber,
-                let boundsDictionary = dictionary[kCGWindowBounds as String] as? NSDictionary,
-                let bounds = CGRect(dictionaryRepresentation: boundsDictionary)
+                layer.intValue == 0
             else {
                 return nil
             }
 
             let isOnScreen = (dictionary[kCGWindowIsOnscreen as String] as? NSNumber)?.boolValue ?? true
             let alpha = (dictionary[kCGWindowAlpha as String] as? NSNumber)?.doubleValue ?? 1
+            guard
+                isOnScreen,
+                alpha > 0.01,
+                let ownerName = dictionary[kCGWindowOwnerName as String] as? String,
+                let boundsDictionary = dictionary[kCGWindowBounds as String] as? NSDictionary,
+                let bounds = CGRect(dictionaryRepresentation: boundsDictionary)
+            else {
+                return nil
+            }
+
             return ObservedWindow(
                 ownerName: ownerName,
                 ownerPID: pid_t(ownerPID.int32Value),

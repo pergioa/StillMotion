@@ -57,6 +57,10 @@ final class VideoWallpaperView: NSView {
     }
 
     func setPlaceholder(imageURL: URL?) {
+        guard !playerLayer.isReadyForDisplay else {
+            placeholderLayer.contents = nil
+            return
+        }
         guard let imageURL, let image = NSImage(contentsOf: imageURL) else {
             placeholderLayer.contents = nil
             return
@@ -85,6 +89,7 @@ final class VideoWallpaperView: NSView {
             DispatchQueue.main.async {
                 guard let self, self.playerLayer === layer else { return }
                 layer.isHidden = false
+                self.placeholderLayer.contents = nil
                 self.playerReadyObservation?.invalidate()
                 self.playerReadyObservation = nil
             }

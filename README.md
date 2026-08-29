@@ -7,7 +7,7 @@ StillMotion is a native macOS 14+ menu-bar utility that loops a chosen local vid
 - `AppModel` owns persisted user intent and applies a single `PlaybackPolicy` to all displays.
 - `MediaImportService` validates AVFoundation playability and video tracks, enforces the 1 GB limit, and safely persists an independent video assignment for each display UUID.
 - `WallpaperCoordinator` maintains one low-level borderless window and one muted `AVQueuePlayer`/`AVPlayerLooper` per `NSScreen`. It also applies a cached still frame from each video as that display's system wallpaper so Mission Control, Show Desktop, and Space animations use matching imagery.
-- `FullScreenDetector` combines workspace and display notifications with a 750 ms polling fallback. It classifies visible layer-0 Core Graphics windows against full `CGDisplayBounds` values.
+- `FullScreenDetector` combines workspace and display notifications with a 1 second polling fallback. It classifies visible layer-0 Core Graphics windows against full `CGDisplayBounds` values.
 - `SystemActivityObserver` pauses playback for sleep, display sleep, and inactive login sessions.
 
 ## Public API limitation

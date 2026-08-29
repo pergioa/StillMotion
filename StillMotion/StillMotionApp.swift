@@ -267,7 +267,12 @@ private struct StillMotionMenu: View {
 }
 
 private struct BackgroundPreview: View {
-    private static let imageCache = NSCache<NSURL, NSImage>()
+    private static let imageCache: NSCache<NSURL, NSImage> = {
+        let cache = NSCache<NSURL, NSImage>()
+        cache.countLimit = 8
+        cache.totalCostLimit = 32 * 1_024 * 1_024
+        return cache
+    }()
 
     let frameURL: URL?
     let hasVideo: Bool
@@ -354,7 +359,8 @@ private struct BackgroundPreview: View {
                 return
             }
             let decodedImage = NSImage(cgImage: cgImage, size: .zero)
-            Self.imageCache.setObject(decodedImage, forKey: frameURL as NSURL)
+            let imageCost = cgImage.bytesPerRow * cgImage.height
+            Self.imageCache.setObject(decodedImage, forKey: frameURL as NSURL, cost: imageCost)
             image = decodedImage
         }
     }

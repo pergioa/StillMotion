@@ -69,7 +69,7 @@ final class WallpaperCoordinator {
                 NSLog("Unable to prepare the system wallpaper for display %@: %@", displayID, error.localizedDescription)
             }
         }
-        refreshScreens()
+        refreshScreens(synchronizeSystemWallpaper: false)
     }
 
     func setMedia(url: URL, for displayID: String) async {
@@ -91,7 +91,6 @@ final class WallpaperCoordinator {
 
         guard mediaURLsByDisplayID[displayID] == url else { return }
         refreshScreens(synchronizeSystemWallpaper: false)
-        synchronizeSystemWallpaper(for: displayID)
     }
 
     func removeMedia(for displayID: String) {
@@ -173,17 +172,6 @@ final class WallpaperCoordinator {
             }
             synchronizeSystemWallpaper(for: displayID, screen: screen, mediaURL: mediaURL)
         }
-    }
-
-    private func synchronizeSystemWallpaper(for displayID: String) {
-        guard
-            let screen = NSScreen.screens.first(where: { $0.persistentDisplayID == displayID }),
-            let mediaURL = mediaURLsByDisplayID[displayID]
-        else {
-            return
-        }
-
-        synchronizeSystemWallpaper(for: displayID, screen: screen, mediaURL: mediaURL)
     }
 
     private func synchronizeSystemWallpaper(for displayID: String, screen: NSScreen, mediaURL: URL) {
@@ -304,7 +292,6 @@ private final class DisplayPlaybackSession {
     func load(url: URL, placeholderURL: URL?, shouldPlay: Bool, previousPlayer: AVPlayer?) {
         mediaURL = url
         wantsPlayback = shouldPlay
-        videoView.setPlaceholder(imageURL: placeholderURL)
 
         let item = AVPlayerItem(asset: AVURLAsset(url: url))
         let queuePlayer = AVQueuePlayer()
@@ -318,6 +305,7 @@ private final class DisplayPlaybackSession {
         looper = newLooper
 
         videoView.install(player: queuePlayer)
+        videoView.setPlaceholder(imageURL: placeholderURL)
         previousPlayer?.pause()
         if let old = previousPlayer as? AVQueuePlayer { old.removeAllItems() }
 
