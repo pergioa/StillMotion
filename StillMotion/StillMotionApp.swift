@@ -18,6 +18,11 @@ private struct StillMotionMenu: View {
     @ObservedObject var model: AppModel
     @State private var selectedDisplayID: String?
 
+    init(model: AppModel, initialDisplayID: String? = nil) {
+        self.model = model
+        _selectedDisplayID = State(initialValue: initialDisplayID)
+    }
+
     private var selectedDisplay: DisplayDescriptor? {
         model.availableDisplays.first(where: { $0.id == selectedDisplayID })
             ?? model.availableDisplays.first(where: \.isMain)
@@ -42,36 +47,6 @@ private struct StillMotionMenu: View {
         }
     }
 
-    private var statusDetail: String {
-        switch model.policy.effectiveState {
-        case .playing:
-            return "Video backgrounds are moving"
-        case .pausedByUser:
-            return "Paused until you resume"
-        case .pausedForFullScreen:
-            return model.hasPlayingMedia
-                ? "Paused only on displays with full-screen apps"
-                : "Will resume after full screen"
-        case .pausedForSystem:
-            return "Waiting for the system to become active"
-        case .noMedia:
-            return "Choose a video to get started"
-        }
-    }
-
-    private var playbackHeading: String {
-        switch model.policy.effectiveState {
-        case .playing:
-            return "Backgrounds Playing"
-        case .noMedia:
-            return "Ready for a Background"
-        case .pausedForFullScreen:
-            return model.hasPlayingMedia ? "Full-Screen Pause" : "Backgrounds Paused"
-        case .pausedByUser, .pausedForSystem:
-            return "Backgrounds Paused"
-        }
-    }
-
     private var displayIDs: [String] {
         model.availableDisplays.map(\.id)
     }
@@ -81,24 +56,20 @@ private struct StillMotionMenu: View {
             header
 
             ScrollView {
-                VStack(alignment: .leading, spacing: 18) {
-                    playbackCard
-
+                VStack(alignment: .leading, spacing: 14) {
                     if model.availableDisplays.isEmpty {
                         noDisplaysView
                     } else {
                         displaySelector
                         if let selectedDisplay {
-                            backgroundCard(for: selectedDisplay)
+                            backgroundSection(for: selectedDisplay)
                         }
                     }
                 }
                 .padding(16)
             }
-
-            footer
         }
-        .frame(width: 380, height: 560)
+        .frame(width: 380, height: 430)
         .background {
             ZStack {
                 Color(nsColor: .windowBackgroundColor)
@@ -119,20 +90,24 @@ private struct StillMotionMenu: View {
         HStack(spacing: 12) {
             ZStack {
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(Color.accentColor.gradient)
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                Color(red: 0.04, green: 0.59, blue: 1),
+                                Color(red: 0.02, green: 0.36, blue: 0.96)
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
                 Image(systemName: "rectangle.stack.fill")
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(.white)
             }
             .frame(width: 34, height: 34)
 
-            VStack(alignment: .leading, spacing: 1) {
-                Text("StillMotion")
-                    .font(.headline)
-                Text("Desktop video controller")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
+            Text("StillMotion")
+                .font(.headline)
 
             Spacer()
 
@@ -145,181 +120,117 @@ private struct StillMotionMenu: View {
         }
     }
 
-    private var playbackCard: some View {
-        HStack(spacing: 14) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(playbackHeading)
-                    .font(.system(size: 15, weight: .semibold))
-                Text(statusDetail)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(2)
-            }
-
-            Spacer(minLength: 8)
-
-            Button(action: model.toggleManualPlayback) {
-                ZStack {
-                    Circle()
-                        .fill(model.hasMedia ? Color.accentColor : Color.secondary.opacity(0.14))
-                    Image(systemName: model.policy.isManuallyPaused ? "play.fill" : "pause.fill")
-                        .font(.system(size: 15, weight: .bold))
-                        .foregroundStyle(model.hasMedia ? Color.white : Color.secondary)
-                }
-                .frame(width: 42, height: 42)
-                .contentShape(Circle())
-            }
-            .buttonStyle(.plain)
-            .disabled(!model.hasMedia)
-            .help(model.policy.isManuallyPaused ? "Resume all backgrounds" : "Pause all backgrounds")
-            .accessibilityLabel(model.policy.isManuallyPaused ? "Resume all backgrounds" : "Pause all backgrounds")
-            .keyboardShortcut("p", modifiers: .command)
-        }
-        .padding(14)
-        .background {
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(.quaternary.opacity(0.55))
-        }
-        .overlay {
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .strokeBorder(Color.primary.opacity(0.08))
-        }
-    }
-
     private var displaySelector: some View {
-        VStack(alignment: .leading, spacing: 9) {
-            HStack {
-                Text("DISPLAYS")
-                    .font(.caption2.weight(.semibold))
-                    .foregroundStyle(.secondary)
-                    .tracking(0.8)
-                Spacer()
-                Text("\(model.availableDisplays.count) connected")
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
-            }
+        VStack(alignment: .leading, spacing: 8) {
+            sectionHeader("Displays", detail: "\(model.availableDisplays.count) connected")
 
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 8) {
-                    ForEach(model.availableDisplays) { display in
-                        DisplaySelectorButton(
-                            display: display,
-                            hasVideo: model.videoFilename(for: display.id) != nil,
-                            isSelected: selectedDisplay?.id == display.id
-                        ) {
-                            selectedDisplayID = display.id
-                        }
+            LazyVGrid(
+                columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible())],
+                spacing: 8
+            ) {
+                ForEach(model.availableDisplays) { display in
+                    DisplaySelectorButton(
+                        display: display,
+                        hasVideo: model.videoFilename(for: display.id) != nil,
+                        isSelected: selectedDisplay?.id == display.id
+                    ) {
+                        selectedDisplayID = display.id
                     }
                 }
             }
         }
     }
 
-    private func backgroundCard(for display: DisplayDescriptor) -> some View {
+    private func backgroundSection(for display: DisplayDescriptor) -> some View {
         let hasVideo = selectedVideoFilename != nil
         let frameURL = model.previewFrameURL(for: display.id)
+        let actionsDisabled = model.isBackgroundActionDisabled(for: display.id)
 
-        return VStack(spacing: 0) {
-            BackgroundPreview(
-                frameURL: frameURL,
-                hasVideo: hasVideo,
-                isLoading: model.isRestoringVideos || model.isUpdatingBackground(for: display.id),
-                videoDescription: videoDescription(selectedVideoFilename)
-            )
-            .id("\(display.id)|\(frameURL?.path ?? "")")
-            .frame(height: 124)
-            .padding(10)
+        return VStack(alignment: .leading, spacing: 8) {
+            sectionHeader("Background", detail: displayTitle(display))
 
-            Divider()
+            VStack(spacing: 0) {
+                BackgroundPreview(
+                    frameURL: frameURL,
+                    hasVideo: hasVideo,
+                    isLoading: model.isRestoringVideos || model.isUpdatingBackground(for: display.id)
+                )
+                .id("\(display.id)|\(frameURL?.path ?? "")")
+                .frame(height: 118)
+                .padding(10)
 
-            HStack(alignment: .center, spacing: 12) {
-                VStack(alignment: .leading, spacing: 3) {
-                    HStack(spacing: 6) {
-                        Text(displayTitle(display))
-                            .font(.subheadline.weight(.semibold))
-                            .lineLimit(1)
-                        if display.isMain {
-                            Text("MAIN")
-                                .font(.system(size: 8, weight: .bold))
-                                .foregroundStyle(Color.accentColor)
-                                .padding(.horizontal, 5)
-                                .padding(.vertical, 2)
-                                .background(Color.accentColor.opacity(0.12), in: Capsule())
-                        }
+                Divider()
+
+                HStack(alignment: .center, spacing: 10) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 7, style: .continuous)
+                            .fill(Color.primary.opacity(0.06))
+                        Image(systemName: hasVideo ? "film.fill" : "film")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(hasVideo ? Color.accentColor : Color.secondary)
                     }
-                    if let selectedVideoFilename {
-                        Text(selectedVideoFilename)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(1)
-                            .truncationMode(.middle)
-                            .help(selectedVideoFilename)
-                    } else {
-                        Text("Ready for a video background")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(1)
-                    }
-                }
-                .layoutPriority(1)
+                    .frame(width: 30, height: 30)
 
-                Spacer(minLength: 8)
+                    Text(selectedVideoFilename ?? "No background selected")
+                        .font(.caption.weight(.semibold))
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                        .help(selectedVideoFilename ?? "No background selected")
+                        .layoutPriority(1)
 
-                Button {
-                    model.chooseVideo(for: display.id)
-                } label: {
-                    if model.isUpdatingBackground(for: display.id) {
-                        ProgressView()
-                            .controlSize(.small)
-                    } else {
-                        Label(
-                            hasVideo ? "Change" : "Choose Video",
-                            systemImage: hasVideo ? "arrow.triangle.2.circlepath" : "plus"
-                        )
-                    }
-                }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.regular)
-                .disabled(model.isBackgroundActionDisabled(for: display.id))
-                .keyboardShortcut("o", modifiers: .command)
+                    Spacer(minLength: 4)
 
-                if hasVideo {
-                    Menu {
-                        Button {
-                            model.revealVideo(for: display.id)
-                        } label: {
-                            Label("Reveal in Finder", systemImage: "folder")
-                        }
-
-                        Divider()
-
-                        Button(role: .destructive) {
-                            model.removeVideo(for: display.id)
-                        } label: {
-                            Label("Remove Background", systemImage: "trash")
-                        }
+                    Button {
+                        model.chooseVideo(for: display.id)
                     } label: {
-                        Image(systemName: "ellipsis.circle")
-                            .font(.system(size: 17))
-                            .frame(width: 24, height: 24)
+                        Group {
+                            if model.isUpdatingBackground(for: display.id) {
+                                ProgressView()
+                                    .controlSize(.small)
+                                    .tint(.white)
+                                    .frame(width: 96)
+                            } else {
+                                Text(hasVideo ? "Change Background" : "Choose Background")
+                                    .font(.caption.weight(.semibold))
+                                    .padding(.horizontal, 10)
+                            }
+                        }
+                        .foregroundStyle(.white)
+                        .frame(height: 28)
+                        .background(Color.accentColor, in: RoundedRectangle(cornerRadius: 7))
                     }
-                    .menuIndicator(.hidden)
-                    .fixedSize()
-                    .disabled(model.isBackgroundActionDisabled(for: display.id))
-                    .help("More background actions")
+                    .buttonStyle(.plain)
+                    .disabled(actionsDisabled)
+                    .opacity(actionsDisabled ? 0.5 : 1)
+                    .keyboardShortcut("o", modifiers: .command)
+
                 }
+                .padding(10)
             }
-            .padding(12)
+            .background(
+                Color(nsColor: .controlBackgroundColor).opacity(0.75),
+                in: RoundedRectangle(cornerRadius: 14, style: .continuous)
+            )
+            .overlay {
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .strokeBorder(Color.primary.opacity(0.1))
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         }
-        .background(
-            Color(nsColor: .controlBackgroundColor).opacity(0.75),
-            in: RoundedRectangle(cornerRadius: 15, style: .continuous)
-        )
-        .overlay {
-            RoundedRectangle(cornerRadius: 15, style: .continuous)
-                .strokeBorder(Color.primary.opacity(0.1))
+    }
+
+    private func sectionHeader(_ title: String, detail: String) -> some View {
+        HStack(alignment: .firstTextBaseline) {
+            Text(title.uppercased())
+                .font(.caption2.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .tracking(0.8)
+            Spacer()
+            Text(detail)
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
+                .lineLimit(1)
         }
-        .clipShape(RoundedRectangle(cornerRadius: 15, style: .continuous))
     }
 
     private var noDisplaysView: some View {
@@ -338,35 +249,6 @@ private struct StillMotionMenu: View {
         .padding(.vertical, 28)
     }
 
-    private var footer: some View {
-        HStack(spacing: 10) {
-            Button(action: model.toggleManualPlayback) {
-                Label(
-                    model.policy.isManuallyPaused ? "Resume All" : "Pause All",
-                    systemImage: model.policy.isManuallyPaused ? "play.fill" : "pause.fill"
-                )
-                .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(.bordered)
-            .controlSize(.large)
-            .disabled(!model.hasMedia)
-
-            Button {
-                NSApplication.shared.terminate(nil)
-            } label: {
-                Label("Quit", systemImage: "power")
-            }
-            .buttonStyle(.bordered)
-            .controlSize(.large)
-            .keyboardShortcut("q", modifiers: .command)
-        }
-        .padding(12)
-        .background(.bar)
-        .overlay(alignment: .top) {
-            Divider()
-        }
-    }
-
     private func synchronizeSelection() {
         guard !displayIDs.isEmpty else {
             selectedDisplayID = nil
@@ -382,18 +264,14 @@ private struct StillMotionMenu: View {
         display.name.replacingOccurrences(of: " (Main Display)", with: "")
     }
 
-    private func videoDescription(_ filename: String?) -> String {
-        guard let filename else { return "Video background" }
-        let fileExtension = URL(fileURLWithPath: filename).pathExtension.uppercased()
-        return fileExtension.isEmpty ? "Video background" : "\(fileExtension) video background"
-    }
 }
 
 private struct BackgroundPreview: View {
+    private static let imageCache = NSCache<NSURL, NSImage>()
+
     let frameURL: URL?
     let hasVideo: Bool
     let isLoading: Bool
-    let videoDescription: String
     @State private var image: NSImage?
     @State private var loadFailed = false
 
@@ -436,13 +314,6 @@ private struct BackgroundPreview: View {
                                 .background(.black.opacity(0.42), in: Capsule())
                         }
                         Spacer()
-                        HStack(spacing: 5) {
-                            Image(systemName: "photo.fill")
-                            Text(videoDescription)
-                        }
-                        .font(.caption2.weight(.medium))
-                        .foregroundStyle(.white.opacity(0.92))
-                        .frame(maxWidth: .infinity, alignment: .leading)
                     }
                     .padding(9)
                 } else {
@@ -464,6 +335,10 @@ private struct BackgroundPreview: View {
             image = nil
             loadFailed = false
             guard !isLoading, let frameURL else { return }
+            if let cachedImage = Self.imageCache.object(forKey: frameURL as NSURL) {
+                image = cachedImage
+                return
+            }
             let cgImage: CGImage? = await Task.detached(priority: .utility) {
                 guard let source = CGImageSourceCreateWithURL(frameURL as CFURL, nil) else { return nil }
                 let options: [CFString: Any] = [
@@ -478,7 +353,9 @@ private struct BackgroundPreview: View {
                 loadFailed = true
                 return
             }
-            image = NSImage(cgImage: cgImage, size: .zero)
+            let decodedImage = NSImage(cgImage: cgImage, size: .zero)
+            Self.imageCache.setObject(decodedImage, forKey: frameURL as NSURL)
+            image = decodedImage
         }
     }
 
@@ -515,37 +392,64 @@ private struct DisplaySelectorButton: View {
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 8) {
-                ZStack(alignment: .bottomTrailing) {
-                    Image(systemName: "display")
-                        .font(.system(size: 15, weight: .medium))
-                    Circle()
-                        .fill(hasVideo ? Color.green : Color.secondary)
-                        .frame(width: 6, height: 6)
-                        .overlay(Circle().stroke(Color(nsColor: .windowBackgroundColor), lineWidth: 1.5))
-                        .offset(x: 2, y: 1)
-                }
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(spacing: 8) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 7, style: .continuous)
+                            .fill(isSelected ? Color.accentColor.opacity(0.16) : Color.primary.opacity(0.06))
+                        Image(systemName: display.symbolName)
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundStyle(isSelected ? Color.accentColor : Color.primary)
+                    }
+                    .frame(width: 30, height: 30)
 
-                VStack(alignment: .leading, spacing: 1) {
                     Text(display.name.replacingOccurrences(of: " (Main Display)", with: ""))
                         .font(.caption.weight(.semibold))
                         .lineLimit(1)
-                    Text(display.isMain ? "Main display" : (hasVideo ? "Background set" : "No background"))
+
+                    Spacer(minLength: 0)
+
+                    if isSelected {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 13))
+                            .foregroundStyle(Color.accentColor)
+                    }
+                }
+
+                HStack(spacing: 5) {
+                    Text(display.isBuiltIn ? "Built-in display" : "External display")
                         .font(.system(size: 9))
                         .foregroundStyle(.secondary)
+                    if display.isMain {
+                        Text("MAIN")
+                            .font(.system(size: 7, weight: .bold))
+                            .foregroundStyle(Color.accentColor)
+                            .padding(.horizontal, 4)
+                            .padding(.vertical, 1)
+                            .background(Color.accentColor.opacity(0.12), in: Capsule())
+                    }
+                }
+
+                HStack(spacing: 5) {
+                    Circle()
+                        .fill(hasVideo ? Color.green : Color.secondary.opacity(0.65))
+                        .frame(width: 5, height: 5)
+                    Text(hasVideo ? "Background set" : "No background")
+                        .font(.system(size: 9, weight: .medium))
+                        .foregroundStyle(hasVideo ? Color.primary : Color.secondary)
                 }
             }
-            .padding(.horizontal, 11)
-            .padding(.vertical, 8)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(10)
             .background(
-                isSelected ? Color.accentColor.opacity(0.14) : Color.primary.opacity(0.045),
-                in: RoundedRectangle(cornerRadius: 10, style: .continuous)
+                isSelected ? Color.accentColor.opacity(0.1) : Color.primary.opacity(0.035),
+                in: RoundedRectangle(cornerRadius: 11, style: .continuous)
             )
             .overlay {
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .strokeBorder(isSelected ? Color.accentColor.opacity(0.75) : Color.primary.opacity(0.08))
+                RoundedRectangle(cornerRadius: 11, style: .continuous)
+                    .strokeBorder(isSelected ? Color.accentColor : Color.primary.opacity(0.08))
             }
-            .contentShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .contentShape(RoundedRectangle(cornerRadius: 11, style: .continuous))
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Select \(display.name)")
@@ -555,23 +459,29 @@ private struct DisplaySelectorButton: View {
 }
 
 @MainActor
-final class AppDelegate: NSObject, NSApplicationDelegate {
+final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     private let model = AppModel()
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
     private let popover = NSPopover()
     private var modelObserver: AnyCancellable?
+    private var lastStatusItemState: (symbolName: String, statusText: String)?
+    private var contextualDisplayID: String?
+    private var localMouseMonitor: Any?
+    private var globalMouseMonitor: Any?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApplication.shared.setActivationPolicy(.accessory)
 
         popover.behavior = .transient
         popover.animates = true
-        popover.contentSize = NSSize(width: 380, height: 560)
+        popover.delegate = self
+        popover.contentSize = NSSize(width: 380, height: 430)
         popover.contentViewController = NSHostingController(rootView: StillMotionMenu(model: model))
 
         if let button = statusItem.button {
             button.target = self
-            button.action = #selector(togglePopover)
+            button.action = #selector(handleStatusItemClick)
+            button.sendAction(on: [.leftMouseUp, .rightMouseUp])
         }
         updateStatusItem()
 
@@ -586,21 +496,163 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         false
     }
 
-    @objc private func togglePopover() {
+    @objc private func handleStatusItemClick() {
         guard let button = statusItem.button else { return }
+        if NSApp.currentEvent?.type == .rightMouseUp {
+            closePopover()
+            showStatusMenu(relativeTo: button)
+            return
+        }
+
+        if popover.isShown {
+            closePopover()
+        } else {
+            let displayID = button.window?.screen?.persistentDisplayID
+            popover.contentViewController = NSHostingController(
+                rootView: StillMotionMenu(model: model, initialDisplayID: displayID)
+            )
+            popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+            installOutsideClickMonitors()
+        }
+    }
+
+    func popoverDidClose(_ notification: Notification) {
+        removeOutsideClickMonitors()
+    }
+
+    private func installOutsideClickMonitors() {
+        removeOutsideClickMonitors()
+
+        localMouseMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) {
+            [weak self] event in
+            guard let self, self.popover.isShown else { return event }
+            let clickedWindow = event.window
+            let popoverWindow = self.popover.contentViewController?.view.window
+            let statusItemWindow = self.statusItem.button?.window
+            if clickedWindow !== popoverWindow && clickedWindow !== statusItemWindow {
+                self.closePopover()
+            }
+            return event
+        }
+
+        globalMouseMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) {
+            [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.closePopover()
+            }
+        }
+    }
+
+    private func closePopover() {
         if popover.isShown {
             popover.performClose(nil)
-        } else {
-            popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
         }
+        removeOutsideClickMonitors()
+    }
+
+    private func removeOutsideClickMonitors() {
+        if let localMouseMonitor {
+            NSEvent.removeMonitor(localMouseMonitor)
+            self.localMouseMonitor = nil
+        }
+        if let globalMouseMonitor {
+            NSEvent.removeMonitor(globalMouseMonitor)
+            self.globalMouseMonitor = nil
+        }
+    }
+
+    private func showStatusMenu(relativeTo button: NSStatusBarButton) {
+        contextualDisplayID = button.window?.screen?.persistentDisplayID
+            ?? model.availableDisplays.first(where: \.isMain)?.id
+            ?? model.availableDisplays.first?.id
+
+        let hasBackground = contextualDisplayID.flatMap(model.videoFilename(for:)) != nil
+        let backgroundActionsDisabled = contextualDisplayID.map(model.isBackgroundActionDisabled(for:)) ?? true
+        let menu = NSMenu()
+        menu.autoenablesItems = false
+
+        let playbackItem = NSMenuItem(
+            title: model.policy.isManuallyPaused ? "Play Backgrounds" : "Pause Backgrounds",
+            action: #selector(togglePlaybackFromStatusMenu),
+            keyEquivalent: ""
+        )
+        playbackItem.target = self
+        playbackItem.image = NSImage(
+            systemSymbolName: model.policy.isManuallyPaused ? "play.fill" : "pause.fill",
+            accessibilityDescription: nil
+        )
+        playbackItem.isEnabled = model.hasMedia
+        menu.addItem(playbackItem)
+        menu.addItem(.separator())
+
+        let revealItem = NSMenuItem(
+            title: "Reveal Background in Finder",
+            action: #selector(revealBackgroundFromStatusMenu),
+            keyEquivalent: ""
+        )
+        revealItem.target = self
+        revealItem.image = NSImage(systemSymbolName: "folder", accessibilityDescription: nil)
+        revealItem.isEnabled = hasBackground && !backgroundActionsDisabled
+        menu.addItem(revealItem)
+
+        let removeItem = NSMenuItem(
+            title: "Remove Background",
+            action: #selector(removeBackgroundFromStatusMenu),
+            keyEquivalent: ""
+        )
+        removeItem.target = self
+        removeItem.image = NSImage(systemSymbolName: "trash", accessibilityDescription: nil)
+        removeItem.isEnabled = hasBackground && !backgroundActionsDisabled
+        menu.addItem(removeItem)
+        menu.addItem(.separator())
+
+        let quitItem = NSMenuItem(
+            title: "Quit StillMotion",
+            action: #selector(quitFromStatusMenu),
+            keyEquivalent: "q"
+        )
+        quitItem.target = self
+        quitItem.image = NSImage(systemSymbolName: "power", accessibilityDescription: nil)
+        menu.addItem(quitItem)
+
+        statusItem.menu = menu
+        button.performClick(nil)
+        statusItem.menu = nil
+    }
+
+    @objc private func togglePlaybackFromStatusMenu() {
+        model.toggleManualPlayback()
+    }
+
+    @objc private func revealBackgroundFromStatusMenu() {
+        guard let contextualDisplayID else { return }
+        model.revealVideo(for: contextualDisplayID)
+    }
+
+    @objc private func removeBackgroundFromStatusMenu() {
+        guard let contextualDisplayID else { return }
+        model.removeVideo(for: contextualDisplayID)
+    }
+
+    @objc private func quitFromStatusMenu() {
+        NSApplication.shared.terminate(nil)
     }
 
     private func updateStatusItem() {
         guard let button = statusItem.button else { return }
-        let image = NSImage(systemSymbolName: model.menuBarSymbolName, accessibilityDescription: nil)
+        let state = (symbolName: model.menuBarSymbolName, statusText: model.statusText)
+        if let lastStatusItemState,
+           lastStatusItemState.symbolName == state.symbolName,
+           lastStatusItemState.statusText == state.statusText
+        {
+            return
+        }
+        lastStatusItemState = state
+
+        let image = NSImage(systemSymbolName: state.symbolName, accessibilityDescription: nil)
         image?.isTemplate = true
         button.image = image
-        button.toolTip = "StillMotion: \(model.statusText)"
-        button.setAccessibilityLabel("StillMotion: \(model.statusText)")
+        button.toolTip = "StillMotion: \(state.statusText)"
+        button.setAccessibilityLabel("StillMotion: \(state.statusText)")
     }
 }

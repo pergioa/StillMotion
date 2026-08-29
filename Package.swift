@@ -18,7 +18,7 @@ let package = Package(
             name: "StillMotion",
             dependencies: ["StillMotionCore"],
             path: "StillMotion",
-            exclude: ["Info.plist", "StillMotion.entitlements"],
+            exclude: ["Assets.xcassets", "Info.plist", "StillMotion.entitlements"],
             swiftSettings: [.swiftLanguageMode(.v5)]
         ),
         .executableTarget(

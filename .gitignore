@@ -13,3 +13,10 @@ xcuserdata/
 project.xcworkspace/xcshareddata/
 
 # Test report files
+
+# Swift Package Manager and local release builds
+.build/
+.swiftpm/
+
+# Generated release archives
+StillMotion-*.zip

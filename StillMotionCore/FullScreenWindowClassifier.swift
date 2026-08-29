@@ -55,17 +55,20 @@ public enum FullScreenWindowClassifier {
         ownOwnerName: String = "StillMotion",
         tolerance: CGFloat = defaultTolerance
     ) -> Set<Int> {
-        Set(screenBounds.indices.filter { screenIndex in
-            windows.contains { window in
-                isFullScreenWindow(
-                    window,
-                    screenBounds: [screenBounds[screenIndex]],
-                    ownPID: ownPID,
-                    ownOwnerName: ownOwnerName,
-                    tolerance: tolerance
-                )
+        let normalizedOwnOwnerName = ownOwnerName.lowercased()
+        var indexes: Set<Int> = []
+        for window in windows where isRelevantWindow(
+            window,
+            ownPID: ownPID,
+            normalizedOwnOwnerName: normalizedOwnOwnerName
+        ) {
+            for (index, screen) in screenBounds.enumerated()
+                where approximatelyEqual(window.bounds, screen, tolerance: tolerance)
+            {
+                indexes.insert(index)
             }
-        })
+        }
+        return indexes
     }
 
     public static func isFullScreenWindow(
@@ -75,13 +78,11 @@ public enum FullScreenWindowClassifier {
         ownOwnerName: String = "StillMotion",
         tolerance: CGFloat = defaultTolerance
     ) -> Bool {
-        guard window.isOnScreen, window.layer == 0, window.alpha > 0.01 else { return false }
-        guard window.ownerPID != ownPID else { return false }
-
-        let normalizedOwner = window.ownerName.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        guard !normalizedOwner.isEmpty else { return false }
-        guard normalizedOwner != ownOwnerName.lowercased() else { return false }
-        guard !excludedOwnerNames.contains(normalizedOwner) else { return false }
+        guard isRelevantWindow(
+            window,
+            ownPID: ownPID,
+            normalizedOwnOwnerName: ownOwnerName.lowercased()
+        ) else { return false }
 
         return screenBounds.contains { screen in
             approximatelyEqual(window.bounds, screen, tolerance: tolerance)
@@ -93,5 +94,19 @@ public enum FullScreenWindowClassifier {
             abs(lhs.minY - rhs.minY) <= tolerance &&
             abs(lhs.width - rhs.width) <= tolerance &&
             abs(lhs.height - rhs.height) <= tolerance
+    }
+
+    private static func isRelevantWindow(
+        _ window: ObservedWindow,
+        ownPID: pid_t,
+        normalizedOwnOwnerName: String
+    ) -> Bool {
+        guard window.isOnScreen, window.layer == 0, window.alpha > 0.01 else { return false }
+        guard window.ownerPID != ownPID else { return false }
+
+        let normalizedOwner = window.ownerName.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        return !normalizedOwner.isEmpty &&
+            normalizedOwner != normalizedOwnOwnerName &&
+            !excludedOwnerNames.contains(normalizedOwner)
     }
 }

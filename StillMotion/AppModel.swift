@@ -82,7 +82,7 @@ final class AppModel: ObservableObject {
     }
 
     var menuBarSymbolName: String {
-        hasPlayingMedia ? "play.rectangle.fill" : "pause.rectangle.fill"
+        "rectangle.stack.fill"
     }
 
     func videoFilename(for displayID: String) -> String? {
@@ -106,8 +106,8 @@ final class AppModel: ObservableObject {
         guard let display = availableDisplays.first(where: { $0.id == displayID }) else { return }
         busyDisplayIDs.insert(displayID)
         let panel = NSOpenPanel()
-        panel.title = "Choose a Video for \(display.name)"
-        panel.prompt = "Choose Video"
+        panel.title = "Choose a Background for \(display.name)"
+        panel.prompt = "Choose Background"
         panel.canChooseDirectories = false
         panel.canChooseFiles = true
         panel.allowsMultipleSelection = false
@@ -130,6 +130,7 @@ final class AppModel: ObservableObject {
         guard policy.hasMedia else { return }
         policy.isManuallyPaused.toggle()
         defaults.set(policy.isManuallyPaused, forKey: DefaultsKey.manuallyPaused)
+        updateFullScreenDetection()
         applyPlaybackPolicy()
     }
 
@@ -233,7 +234,7 @@ final class AppModel: ObservableObject {
     private func updateMediaPolicy() {
         policy.hasMedia = hasMedia
         policy.isFullScreenVisible = !affectedFullScreenDisplayIDs.isEmpty
-        fullScreenDetector.setEnabled(hasMedia && !policy.isSystemInactive)
+        updateFullScreenDetection()
         applyPlaybackPolicy()
     }
 
@@ -247,8 +248,12 @@ final class AppModel: ObservableObject {
     private func setSystemInactive(_ isInactive: Bool) {
         guard policy.isSystemInactive != isInactive else { return }
         policy.isSystemInactive = isInactive
-        fullScreenDetector.setEnabled(hasMedia && !isInactive)
+        updateFullScreenDetection()
         applyPlaybackPolicy()
+    }
+
+    private func updateFullScreenDetection() {
+        fullScreenDetector.setEnabled(hasMedia && !policy.isSystemInactive && !policy.isManuallyPaused)
     }
 
     private func applyPlaybackPolicy() {

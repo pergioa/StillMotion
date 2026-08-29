@@ -5,6 +5,11 @@ struct DisplayDescriptor: Identifiable, Equatable {
     let id: String
     let name: String
     let isMain: Bool
+    let isBuiltIn: Bool
+
+    var symbolName: String {
+        isBuiltIn ? "laptopcomputer" : "display"
+    }
 
     static func currentDisplays() -> [DisplayDescriptor] {
         let screens = NSScreen.screens
@@ -25,7 +30,8 @@ struct DisplayDescriptor: Identifiable, Equatable {
             return DisplayDescriptor(
                 id: persistentID,
                 name: isMain ? "\(numberedName) (Main Display)" : numberedName,
-                isMain: isMain
+                isMain: isMain,
+                isBuiltIn: CGDisplayIsBuiltin(displayID) != 0
             )
         }
     }

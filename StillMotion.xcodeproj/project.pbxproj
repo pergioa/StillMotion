@@ -22,6 +22,7 @@
 		A00000000000000000000013 /* MediaFileValidatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000013 /* MediaFileValidatorTests.swift */; };
 		A00000000000000000000014 /* DisplayDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000016 /* DisplayDescriptor.swift */; };
 		A00000000000000000000015 /* WallpaperWindowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000017 /* WallpaperWindowTests.swift */; };
+		A00000000000000000000016 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000018 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -52,6 +53,7 @@
 		B00000000000000000000015 /* MediaFileValidator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaFileValidator.swift; sourceTree = "<group>"; };
 		B00000000000000000000016 /* DisplayDescriptor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayDescriptor.swift; sourceTree = "<group>"; };
 		B00000000000000000000017 /* WallpaperWindowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperWindowTests.swift; sourceTree = "<group>"; };
+		B00000000000000000000018 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		B00000000000000000000020 /* StillMotion.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = StillMotion.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B00000000000000000000021 /* StillMotionTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = StillMotionTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -95,6 +97,7 @@
 				B00000000000000000000006 /* WallpaperWindow.swift */,
 				B00000000000000000000007 /* FullScreenDetector.swift */,
 				B00000000000000000000008 /* SystemActivityObserver.swift */,
+				B00000000000000000000018 /* Assets.xcassets */,
 				B00000000000000000000009 /* Info.plist */,
 				B00000000000000000000010 /* StillMotion.entitlements */,
 			);
@@ -212,6 +215,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A00000000000000000000016 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -363,6 +367,7 @@
 		C00000000000000000000111 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = StillMotion/StillMotion.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -387,6 +392,7 @@
 		C00000000000000000000112 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = StillMotion/StillMotion.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;

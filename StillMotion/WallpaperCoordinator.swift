@@ -46,13 +46,22 @@ final class WallpaperCoordinator {
     func setMediaURLs(_ mediaURLs: [String: URL]) async {
         systemWallpaperTasks.values.forEach { $0.cancel() }
         systemWallpaperTasks.removeAll()
+        let previousMediaURLs = mediaURLsByDisplayID
         mediaURLsByDisplayID = mediaURLs
-        var preparedFrameURLs: [String: URL] = [:]
+
+        let changedDisplayIDs = Set(previousMediaURLs.keys).union(mediaURLs.keys).filter {
+            previousMediaURLs[$0] != mediaURLs[$0]
+        }
+        for displayID in changedDisplayIDs {
+            setPreviewFrameURL(nil, for: displayID)
+        }
+        refreshScreens(synchronizeSystemWallpaper: false)
+
         for (displayID, mediaURL) in mediaURLs {
             do {
                 let frameURL = try await systemWallpaperFrames.frameURL(for: mediaURL)
                 guard mediaURLsByDisplayID[displayID] == mediaURL else { continue }
-                preparedFrameURLs[displayID] = frameURL
+                setPreviewFrameURL(frameURL, for: displayID)
                 if let screen = NSScreen.screens.first(where: { $0.persistentDisplayID == displayID }) {
                     try applySystemWallpaper(frameURL, to: screen)
                 }
@@ -60,34 +69,19 @@ final class WallpaperCoordinator {
                 NSLog("Unable to prepare the system wallpaper for display %@: %@", displayID, error.localizedDescription)
             }
         }
-        frameURLsByDisplayID = preparedFrameURLs
-        onPreviewFramesChanged?(frameURLsByDisplayID)
-        for (displayID, session) in sessions {
-            guard let url = mediaURLs[displayID] else {
-                sessions.removeValue(forKey: displayID)?.close()
-                continue
-            }
-            if session.mediaURL != url {
-                let previousPlayer = session.player
-                session.load(
-                    url: url,
-                    placeholderURL: frameURLsByDisplayID[displayID],
-                    shouldPlay: shouldPlay(on: displayID),
-                    previousPlayer: previousPlayer
-                )
-            }
-        }
-        refreshScreens(synchronizeSystemWallpaper: false)
+        refreshScreens()
     }
 
     func setMedia(url: URL, for displayID: String) async {
         systemWallpaperTasks.removeValue(forKey: displayID)?.cancel()
         mediaURLsByDisplayID[displayID] = url
-        var preparedFrameURL: URL?
+        setPreviewFrameURL(nil, for: displayID)
+        refreshScreens(synchronizeSystemWallpaper: false)
+
         do {
             let frameURL = try await systemWallpaperFrames.frameURL(for: url)
             guard mediaURLsByDisplayID[displayID] == url else { return }
-            preparedFrameURL = frameURL
+            setPreviewFrameURL(frameURL, for: displayID)
             if let screen = NSScreen.screens.first(where: { $0.persistentDisplayID == displayID }) {
                 try applySystemWallpaper(frameURL, to: screen)
             }
@@ -95,8 +89,9 @@ final class WallpaperCoordinator {
             NSLog("Unable to prepare the system wallpaper for display %@: %@", displayID, error.localizedDescription)
         }
 
-        setPreviewFrameURL(preparedFrameURL, for: displayID)
+        guard mediaURLsByDisplayID[displayID] == url else { return }
         refreshScreens(synchronizeSystemWallpaper: false)
+        synchronizeSystemWallpaper(for: displayID)
     }
 
     func removeMedia(for displayID: String) {
@@ -176,19 +171,34 @@ final class WallpaperCoordinator {
             guard let screen = screensByID[displayID], let mediaURL = mediaURLsByDisplayID[displayID] else {
                 continue
             }
-            systemWallpaperTasks[displayID]?.cancel()
-            systemWallpaperTasks[displayID] = Task { [weak self, systemWallpaperFrames] in
-                do {
-                    let frameURL = try await systemWallpaperFrames.frameURL(for: mediaURL)
-                    try Task.checkCancellation()
-                    guard let self, self.mediaURLsByDisplayID[displayID] == mediaURL else { return }
-                    self.setPreviewFrameURL(frameURL, for: displayID)
-                    try Self.applySystemWallpaper(frameURL, to: screen)
-                } catch is CancellationError {
-                    return
-                } catch {
-                    NSLog("Unable to synchronize the system wallpaper for display %@: %@", displayID, error.localizedDescription)
-                }
+            synchronizeSystemWallpaper(for: displayID, screen: screen, mediaURL: mediaURL)
+        }
+    }
+
+    private func synchronizeSystemWallpaper(for displayID: String) {
+        guard
+            let screen = NSScreen.screens.first(where: { $0.persistentDisplayID == displayID }),
+            let mediaURL = mediaURLsByDisplayID[displayID]
+        else {
+            return
+        }
+
+        synchronizeSystemWallpaper(for: displayID, screen: screen, mediaURL: mediaURL)
+    }
+
+    private func synchronizeSystemWallpaper(for displayID: String, screen: NSScreen, mediaURL: URL) {
+        systemWallpaperTasks[displayID]?.cancel()
+        systemWallpaperTasks[displayID] = Task { [weak self, systemWallpaperFrames] in
+            do {
+                let frameURL = try await systemWallpaperFrames.frameURL(for: mediaURL)
+                try Task.checkCancellation()
+                guard let self, self.mediaURLsByDisplayID[displayID] == mediaURL else { return }
+                self.setPreviewFrameURL(frameURL, for: displayID)
+                try Self.applySystemWallpaper(frameURL, to: screen)
+            } catch is CancellationError {
+                return
+            } catch {
+                NSLog("Unable to synchronize the system wallpaper for display %@: %@", displayID, error.localizedDescription)
             }
         }
     }
@@ -196,6 +206,7 @@ final class WallpaperCoordinator {
     private func setPreviewFrameURL(_ frameURL: URL?, for displayID: String) {
         guard frameURLsByDisplayID[displayID] != frameURL else { return }
         frameURLsByDisplayID[displayID] = frameURL
+        sessions[displayID]?.setPlaceholder(imageURL: frameURL)
         onPreviewFramesChanged?(frameURLsByDisplayID)
     }
 
@@ -322,6 +333,10 @@ private final class DisplayPlaybackSession {
         } else {
             player?.pause()
         }
+    }
+
+    func setPlaceholder(imageURL: URL?) {
+        videoView.setPlaceholder(imageURL: imageURL)
     }
 
     func update(screen: NSScreen) {
