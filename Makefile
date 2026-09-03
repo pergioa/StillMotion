@@ -29,14 +29,7 @@ release-dmg: release
 	VERSION=$$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$$APP/Contents/Info.plist"); \
 	test -z "$$(git status --porcelain --untracked-files=normal)" || VERSION="$$VERSION-dirty"; \
 	DMG="StillMotion-$$VERSION.dmg"; \
-	STAGING=$$(mktemp -d "$${TMPDIR:-/tmp}/stillmotion-dmg.XXXXXX"); \
-	trap 'rm -rf "$$STAGING"' EXIT; \
-	ditto "$$APP" "$$STAGING/StillMotion.app"; \
-	ditto "LICENSE" "$$STAGING/LICENSE"; \
-	ln -s /Applications "$$STAGING/Applications"; \
-	rm -f "$$DMG"; \
-	hdiutil create -volname "StillMotion" -srcfolder "$$STAGING" -ov -format UDZO "$$DMG" >/dev/null; \
-	hdiutil verify "$$DMG" >/dev/null; \
+	./scripts/create-dmg.sh "$$APP" "$$DMG"; \
 	echo "Created $$DMG"; \
 	echo "This DMG is unsigned; users may need to right-click StillMotion and choose Open."
 
