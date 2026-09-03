@@ -51,6 +51,13 @@ final class PlaybackPolicyTests: XCTestCase {
         XCTAssertEqual(policy.effectiveState, .pausedForSystem)
         XCTAssertFalse(policy.shouldPlay)
     }
+
+    @MainActor
+    func testMenuBarShowsPauseBadgeWhenAnyDisplayIsPausedForFullScreen() {
+        let policy = PlaybackPolicy(hasMedia: true, isFullScreenVisible: true)
+
+        XCTAssertEqual(AppModel.menuBarSymbolName(for: policy), "rectangle.stack.fill.badge.minus")
+    }
 }
 #else
 import Foundation

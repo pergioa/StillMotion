@@ -60,24 +60,24 @@ private struct StillMotionMenu: View {
         VStack(spacing: 0) {
             header
 
-            ScrollView {
-                VStack(alignment: .leading, spacing: 14) {
-                    if model.availableDisplays.isEmpty {
-                        noDisplaysView
-                    } else {
-                        displaySelector
-                        if let selectedDisplay {
-                            backgroundSection(for: selectedDisplay)
-                        }
+            VStack(alignment: .leading, spacing: 14) {
+                if model.availableDisplays.isEmpty {
+                    noDisplaysView
+                } else {
+                    displaySelector
+                    if let selectedDisplay {
+                        backgroundSection(for: selectedDisplay)
                     }
                 }
-                .padding(16)
             }
+            .padding(16)
+
+            Spacer(minLength: 0)
 
             Divider()
             supportFooter
         }
-        .frame(width: 380, height: 430)
+        .frame(width: 380, height: 560)
         .background {
             ZStack {
                 Color(nsColor: .windowBackgroundColor)
@@ -509,7 +509,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         popover.behavior = .transient
         popover.animates = true
         popover.delegate = self
-        popover.contentSize = NSSize(width: 380, height: 430)
+        popover.contentSize = NSSize(width: 380, height: 560)
         popover.contentViewController = NSHostingController(rootView: StillMotionMenu(model: model))
 
         if let button = statusItem.button {

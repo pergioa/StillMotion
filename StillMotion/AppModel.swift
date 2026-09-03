@@ -85,7 +85,13 @@ final class AppModel: ObservableObject {
     }
 
     var menuBarSymbolName: String {
-        "rectangle.stack.fill"
+        Self.menuBarSymbolName(for: policy)
+    }
+
+    static func menuBarSymbolName(for policy: PlaybackPolicy) -> String {
+        policy.hasMedia && !policy.shouldPlay
+            ? "rectangle.stack.fill.badge.minus"
+            : "rectangle.stack.fill"
     }
 
     func videoFilename(for displayID: String) -> String? {
