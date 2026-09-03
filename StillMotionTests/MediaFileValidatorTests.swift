@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Sergio Abreo Alvarez
+
 #if canImport(XCTest)
 import XCTest
 @testable import StillMotion

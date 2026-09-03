@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Sergio Abreo Alvarez
+
 import AppKit
 import Combine
 import ImageIO
@@ -15,6 +18,8 @@ struct StillMotionApp: App {
 }
 
 private struct StillMotionMenu: View {
+    private static let supportURL = URL(string: "https://buymeacoffee.com/pergioa")!
+
     @ObservedObject var model: AppModel
     @State private var selectedDisplayID: String?
 
@@ -68,6 +73,9 @@ private struct StillMotionMenu: View {
                 }
                 .padding(16)
             }
+
+            Divider()
+            supportFooter
         }
         .frame(width: 380, height: 430)
         .background {
@@ -118,6 +126,26 @@ private struct StillMotionMenu: View {
         .overlay(alignment: .bottom) {
             Divider()
         }
+    }
+
+    private var supportFooter: some View {
+        HStack(spacing: 10) {
+            Text("Enjoying StillMotion?")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            Spacer()
+
+            Link(destination: Self.supportURL) {
+                Label("Buy Me a Coffee", systemImage: "cup.and.saucer.fill")
+                    .font(.caption.weight(.semibold))
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .background(Color(nsColor: .controlBackgroundColor).opacity(0.5))
     }
 
     private var displaySelector: some View {
