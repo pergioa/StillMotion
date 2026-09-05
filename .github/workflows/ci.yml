@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: Build and test
+    runs-on: macos-15
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      - name: Build and test
+        run: |
+          xcodebuild \
+            -project StillMotion.xcodeproj \
+            -scheme StillMotion \
+            -destination 'platform=macOS' \
+            -derivedDataPath "$RUNNER_TEMP/StillMotionDerivedData" \
+            CODE_SIGNING_ALLOWED=NO \
+            build test

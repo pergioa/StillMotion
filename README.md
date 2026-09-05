@@ -153,6 +153,10 @@ Run the portable core-logic checks with the Swift command-line toolchain:
 swift run StillMotionLogicChecks
 ```
 
+## Contributing
+
+Contributions are welcome through forks and pull requests. Create changes on a `feat/`, `fix/`, or `chore/` branch in your fork, then open a pull request into `main`. See [CONTRIBUTING.md](CONTRIBUTING.md) for the complete workflow, testing requirements, and review process.
+
 ## Release Builds
 
 Create the unsigned DMG installer:
