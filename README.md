@@ -33,7 +33,23 @@ The app uses native AppKit, SwiftUI, AVFoundation, and Core Graphics APIs. It ha
 
 ## Install
 
-1. Download the latest `StillMotion-<version>.dmg` from [GitHub Releases](https://github.com/pergioa/dynamic-wallpaper/releases).
+### Homebrew
+
+Install StillMotion from its Homebrew tap:
+
+```sh
+brew install --cask pergioa/tap/stillmotion
+```
+
+Upgrade later releases with:
+
+```sh
+brew upgrade --cask pergioa/tap/stillmotion
+```
+
+### Disk Image
+
+1. Download the latest `StillMotion-<version>.dmg` from [GitHub Releases](https://github.com/pergioa/StillMotion/releases).
 2. Open the disk image.
 3. Drag `StillMotion.app` onto the included Applications shortcut.
 4. Open StillMotion from the Applications folder.
